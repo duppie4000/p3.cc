@@ -23,13 +23,16 @@ class Nonogram
 	void printKolombeschr();
 	void printRand();
 	void sorteerBeschr();
+	void UpdateBeschr();
 	void grootte();
+	
 	void CursorRechts();
 	void CursorLinks();
 	void CursorOmhoog();
 	void CursorOmlaag();
 	int CursorSettings();
 	void WijzigPunt();
+	
 	int menu();
 	int submenu();
 	int randomgetal();
@@ -38,11 +41,12 @@ class Nonogram
 	
 	
 	private:
-	int h, b;
+	int breedte, hoogte;
 	int rijen[MAX][MAX];
 	int kolommen[MAX][MAX];
 	int kolom = 0;
-	bool nono[MAX][MAX];	
+	bool nono[MAX][MAX];
+	bool update = false;
 	int x, y = 0;//Cursor coordinaten
 	int randperc = 50;
 	string input;
@@ -59,6 +63,18 @@ Nonogram::Nonogram()
 			rijen[i][j] = 0;
 			kolommen[i][j] = 0;
 		}
+}
+
+void Infoblokje()
+{
+	cout << "**************************************************************" << endl;
+	cout << "* Programmeeropdracht 3: Nonogram                            *" << endl;
+	cout << "* Gemaakt door Michiel Flaton - s1688243                     *" << endl;
+	cout << "* 18 november 2016                                           *" << endl;
+	cout << "* Dit programma geeft beschrijvingen voor Nonogrammen en     *" << endl;
+	cout << "* drukt nonogrammen af als plaatje. Ook kan het willekeurige *" << endl;
+	cout << "* nonogrammen genereren en beschrijvingen inlezen uit files. *" << endl;
+	cout << "**************************************************************" << endl;
 }
 
 void Nonogram::vulRandom()
@@ -94,6 +110,7 @@ int main()
 {
 	//Stel de seed van de random number generator in
 	srand (time(NULL));
+	Infoblokje();
 	Nonogram a;
 	a.menu();
 	
@@ -106,6 +123,7 @@ void MenuOpties()
 	cout << "\e[4mW\e[0millekeurig, ";
 	cout << "\e[4mP\e[0marameters, ";
 	cout << "\e[4mS\e[0mtoppen\n";
+	cout << "\e[4mU\e[0mpdate beschrijvingen\n";
 	cout << "Cursor " << "\e[4mL\e[0minks, ";
 	cout << "\e[4mR\e[0mechts, ";
 	cout << "\e[4mO\e[0mmhoog, ";
@@ -150,7 +168,7 @@ int Nonogram::menu()
 				WijzigPunt();
 				break;
 			case 'U': case'u':
-				
+				UpdateBeschr();
 				break;
 			default:
 				cout << "Ongeldige Keuze\n";
@@ -238,7 +256,7 @@ int Nonogram::leesKar()
 //Drukt de bovenste en onderste rand van het nonogram af
 void Nonogram::printRand()
 {
-	int rand = h + 2;
+	int rand = breedte + 2;
 	while (rand != 0)
 	{
 		cout << "#" << ' ';
@@ -249,13 +267,12 @@ void Nonogram::printRand()
 
 void Nonogram::afdrukken()
 {
-	int i, j= 0;
 	printRand();
-	for (i=0; i < b; i++)
+	for (int i=0; i < hoogte; i++)
 	{
 		kolom++;
 		cout << '#' << ' ';
-		for (j=0; j < h; j++)
+		for (int j=0; j < breedte; j++)
 		{
 			if (j == x && i == y)
 				cout << '+' << ' ';
@@ -267,60 +284,71 @@ void Nonogram::afdrukken()
 				cout << ' ' << ' ';
 		}
 		cout << "#" << ' ' ;
-		setRijbeschr(i);
+		if(update == true)
+			setRijbeschr(i);
 		printRijbeschr(i);
+		cout << endl;
 	}
 	kolom = 0;
 	printRand();
-	setKolombeschr();
+	if(update == true)
+	{
+		setKolombeschr();
+		update = false;
+	}	
 	printKolombeschr();
+}
+
+void Nonogram::UpdateBeschr()
+{
+	update = true;
 }
 
 void Nonogram::grootte()
 {
 	
-	int a, c;
+	int temp1, temp2;
 	cout << "Geef de hoogte van het nonogram op (2-50)\n";
-	a = leesGetal();
+	temp1 = leesGetal();
 	cout << "Geef de breedte van het nonogram op (2-50)\n";
-	c = leesGetal();
-	if (a < 2 || a > MAX || c < 2 || c > MAX)
+	temp2 = leesGetal();
+	if (temp1 < 2 || temp1 > MAX || temp2 < 2 || temp2 > MAX)
 	{
 		cout << "Ongeldige grootte, programma sluit\n";
 		exit(0);
 	}
 	else
 	{
-		b = a;
-		h = c;
+		hoogte = temp1;
+		breedte = temp2;
 	}
 }
 
 void Nonogram::CursorRechts()
 {
 	x++;
-	if (x >= h)
+	if (x >= breedte)
 		x = 0;
 }
 
 void Nonogram::CursorLinks()
 {
 	if (x <= 0)
-		x = h;
+		x = breedte;
 	x--;
 }
 
 void Nonogram::CursorOmhoog()
 {
 	if (y == 0)
-		y = b;	
+		y = hoogte;	
 	y--;
 }
 
 void Nonogram::CursorOmlaag()
 {
 	y++;
-	if (y == b)
+	if (y == hoogte)
 		y = 0;
 }
 
@@ -360,7 +388,7 @@ void Nonogram::setRijbeschr(int rij)
 		int teller = 0;
 		int getal = 0;
 		int i;
-		for (i=0; i<h; i++)
+		for (i=0; i<breedte; i++)
 		{
 			rijen[rij][i] = 0;
 
@@ -372,7 +400,7 @@ void Nonogram::setRijbeschr(int rij)
 				teller = 0;
 				getal ++;
 			}
-			if (i == h - 1)
+			if (i == breedte - 1)
 			{
 				rijen[rij][getal] = teller;
 				getal ++;
@@ -382,36 +410,41 @@ void Nonogram::setRijbeschr(int rij)
 	
 void Nonogram::printRijbeschr(int rij)
 {
-	for(int j=0; j<h; j++)
+	int teller = 0;
+	for(int j=0; j<breedte; j++)
+	{
 		if(rijen[rij][j] > 0)
 			cout << rijen[rij][j] << ' ';
-
-	cout << endl;
+		else
+			teller++;
+		if(teller == breedte)
+			cout << '0';
+	}
 }
 
 void Nonogram::setKolombeschr()
 {
 	int teller = 0;
-	for(int i=0; i<b; i++)
+	for(int i=0; i<hoogte; i++)
 	{
-		for(int j=kolom; j<h; j++)
+		for(int j=kolom; j<breedte; j++)
 		{
 			if(j == kolom)
 			{
 				kolommen[i][j] = 0;
 				if(nono[i][j])
 					teller++;
-				else if(teller != 0)
+				else if(teller > 0)
 				{
 					kolommen[i-1][j] = teller;
 					teller = 0;
 				}
-				if(i == b - 1)
+				if(i == hoogte - 1)
 				{
 					kolommen[i][j] = teller;
 					teller = 0;
 					kolom++;
-					if(j != h - 1)
+					if(j != breedte - 1)
 						i = 0;
 				}
 			}
@@ -424,21 +457,24 @@ void Nonogram::setKolombeschr()
 void Nonogram::sorteerBeschr()
 {
 	int rij = 0;
-	for(int i=0; i<b; i++)
-		for(int j=0; j<h; j++)
+	for(int i=0; i<hoogte; i++)
+		for(int j=kolom; j<breedte; j++)
 			if(j == kolom)
 			{
-				if(kolommen[i][j] != 0 && i != 0)
+				if(kolommen[i][j] != 0)
 				{
-					kolommen[rij + 0][j] = kolommen[i][j];
-					kolommen[i][j] = 0;
+					if(i != 0)
+					{
+						kolommen[rij][j] = kolommen[i][j];
+						kolommen[i][j] = 0;
+					}
 					rij++;
 				}
-				if(i == b - 1)
+				if(i == hoogte - 1)
 				{
 					kolom++;
 					rij = 0;
-					if(j != h - 1)
+					if(j != breedte - 1)
 						i = 0;
 				}
 			}
@@ -449,20 +485,20 @@ void Nonogram::printKolombeschr()
 	bool legeRij = false;
 	int teller = 0;
 	
-	for(int i=0; i<b; i++)
+	for(int i=0; i<hoogte; i++)
 	{
 		if(!legeRij)
 		{
 			cout << "  ";
-			for(int j=0; j<h; j++)
+			for(int j=0; j<breedte; j++)
 			{
-				if(kolommen[i][j] != 0)
+				if(kolommen[i][j] > 0)
 					cout << kolommen[i][j] << ' ';
 				else
 				{
 					cout << "  ";
 					teller++;
-					if(teller == h - 1)
+					if(teller == breedte - 1)
 					{
 						legeRij = true;
 						break;
