@@ -1,3 +1,8 @@
+//Auteur: Michiel Flaton S1688243
+//Datum: 18 November 2016
+//Text-editor: Mousepad
+//Compiler: g++ (c++ 11)
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -21,6 +26,7 @@ class Nonogram {
 	void setKolombeschr();
 	void printKolombeschr();
 	void printRand();
+	void printVinkjes();
 	void sorteerBeschr();
 	void UpdateBeschr();
 	void grootte();
@@ -45,18 +51,17 @@ class Nonogram {
 	int breedte, hoogte;
 	int rijen[MAX][MAX]; //Rijbeschrijvingen
 	int kolommen[MAX][MAX]; //Kolombeschrijvingen
-	int kolom = 0;
+	int kolom;
 	bool nono[MAX][MAX]; 
 	bool update = false; //Toggle voor het updaten van beschrijvingen
-	int x, y = 0;//Cursor coordinaten
-	bool trail = false;
-	int randperc = 50;
+	int x, y;//Cursor coordinaten
+	bool trail = false;//Toggle voor de cursor instelling
+	int randperc;//bewaart het percentage voor de random vuller
 	string input;
 	string bestandsnaam;
-	int getal = 0;
 };
 
-//Constructor, maakt de arrays leeg
+//Constructor, maakt de arrays leeg en initialiseert membervariabelen
 Nonogram::Nonogram() {
 	for (int i=0; i<MAX; i++)
 		for (int j=0; j<MAX; j++) {
@@ -66,8 +71,12 @@ Nonogram::Nonogram() {
 		}
 	hoogte = 0;
 	breedte = 0;
+	x = 0;
+	y = 0;
+	randperc = 50;
+	kolom = 0;
 }
-
+//Dit is een infoblokje. Wow. Spannend.
 void Infoblokje() {
 	cout << "**************************************************************" << endl;
 	cout << "* Programmeeropdracht 3: Nonogram                            *" << endl;
@@ -75,7 +84,8 @@ void Infoblokje() {
 	cout << "* 18 november 2016                                           *" << endl;
 	cout << "* Dit programma geeft beschrijvingen voor Nonogrammen en     *" << endl;
 	cout << "* drukt nonogrammen af als plaatje. Ook kan het willekeurige *" << endl;
-	cout << "* nonogrammen genereren en beschrijvingen inlezen uit files. *" << endl;
+	cout << "* nonogrammen genereren en beschrijvingen inlezen uit files  *" << endl;
+	cout << "* en beschrijvingen wegschrijven.                            *" << endl;
 	cout << "**************************************************************" << endl;
 }
 
@@ -104,12 +114,12 @@ void Nonogram::setPercentage() {
 		cout << "Percentage ingesteld op " << randperc << "%.\n";
 	}
 }
-
-int main() {
+//Geeft de gebruiker aan het begin de keuze om een beschrijving in te
+//lezen of zelf een nonogram te tekenen.
+void start()
+{
 	string input;
-	Infoblokje();
 	Nonogram a;
-	
 	cout << "Wilt u een beschrijving inlezen?" << endl;
 	cout << "Y / N" << endl;
 	input = a.leesKar();
@@ -121,16 +131,17 @@ int main() {
 		a.grootte();
 	else {
 		cout << "Ongeldige optie, programma sluit.";
-		return 1;
+		exit(1);
 	}
-	
-
 	a.menu();
-
-	
+}
+//Dit is een main-functie
+int main() {
+	Infoblokje();
+	start();
 	return 0;
 }
-
+//De opties. Van het menu. Duh.
 void MenuOpties() {
 	cout << "S\e[4mc\e[0mhoon, ";
 	cout << "\e[4mW\e[0millekeurig, ";
@@ -144,7 +155,7 @@ void MenuOpties() {
 	cout << "\e[4mB\e[0meneden, ";
 	cout << "\e[4mF\e[0mlip punt\n";
 }
-
+//Hoofdmenu
 int Nonogram::menu() {
 	do {
 		afdrukken();
@@ -188,16 +199,16 @@ int Nonogram::menu() {
 	} while (input != "S");
 	return 0;
 }
-
+//De opties van het submenu. Wow, verassend.
 void subOpties() {
 	cout << "\e[4mG\e[0mrootte, ";
 	cout << "Cursor \e[4mI\e[0mnstelling, ";
 	cout << "\e[4mW\e[0mijzig Random Percentage, ";
-	cout << "\e[4mB\e[0meschrijving inlezen / \e[4ms\4[0mschrijven";
+	cout << "Beschrijving \e[4mL\e[0mezen / \e[4mS\e[0mchrijven, ";
 	cout << "\e[4mT\e[0merug\n";
 	
 }
-
+//Submenu
 int Nonogram::submenu() {
 	do {
 		subOpties();
@@ -212,9 +223,12 @@ int Nonogram::submenu() {
 			case 'W': case 'w':
 				setPercentage();
 				break;
-			case 'B': case'b':
+			case 'L': case 'l':
 				leesBestandsnaam();
 				leesBeschr();
+				break;
+			case 'S': case 's':
+				schrijfBeschr();
 				break;
 			case 'T': case 't':
 				return 1;
@@ -227,12 +241,13 @@ int Nonogram::submenu() {
 	return 1;
 }
 
+//Schoont de array
 void Nonogram::maakSchoon() {
 	for (int i=0; i < MAX; i++)
 		for (int j=0; j < MAX; j++)
 			nono[i][j] = false;
 }
-
+//Leest getallen in en negeert ongeldige karakters
 int Nonogram::leesGetal() {
 	int out = 0;
 	char in [MAX];
@@ -270,6 +285,19 @@ void Nonogram::printRand() {
 	cout << endl;
 }
 
+void Nonogram::printVinkjes() {
+	int vinkjes = breedte;
+	cout << "  ";
+	while(vinkjes > 0) {
+		cout << "V ";
+		vinkjes--;
+	}
+	cout << endl;
+}
+
+
+
+//Drukt het nonogram af in de terminal
 void Nonogram::afdrukken() {
 	printRand();
 	for (int i=0; i < hoogte; i++) {
@@ -284,7 +312,7 @@ void Nonogram::afdrukken() {
 			else
 				cout << ' ' << ' ';
 		}
-		cout << "#" << ' ' ;
+		cout << "#" << " V ";
 		if(update == true)
 			setRijbeschr(i);
 		printRijbeschr(i);
@@ -295,14 +323,15 @@ void Nonogram::afdrukken() {
 	if(update == true) {
 		setKolombeschr();
 		update = false;
-	}	
+	}
+	printVinkjes();
 	printKolombeschr();
 }
-
+//Vernieuwd de beschrijvingen met het huidige beeld
 void Nonogram::UpdateBeschr() {
 	update = true;
 }
-
+//Stelt de grootte van het nonogram in.
 void Nonogram::grootte() {
 	int temp1, temp2;
 	cout << "Geef de hoogte van het nonogram op (2-50)\n";
@@ -318,7 +347,7 @@ void Nonogram::grootte() {
 		breedte = temp2;
 	}
 }
-
+//Verplaatst de cursoor naar rechts
 void Nonogram::CursorRechts() {
 	x++;
 	if(trail)
@@ -326,7 +355,7 @@ void Nonogram::CursorRechts() {
 	if (x >= breedte)
 		x = 0;
 }
-
+//en naar links
 void Nonogram::CursorLinks() {
 	if (x <= 0)
 		x = breedte;
@@ -334,7 +363,7 @@ void Nonogram::CursorLinks() {
 	if(trail)
 		nono[y][x] = !nono[y][x];
 }
-
+//en omhoog
 void Nonogram::CursorOmhoog() {
 	if (y == 0)
 		y = hoogte;	
@@ -342,7 +371,7 @@ void Nonogram::CursorOmhoog() {
 	if(trail)
 		nono[y][x] = !nono[y][x];
 }
-
+//En ook maar omlaag dan
 void Nonogram::CursorOmlaag() {
 	y++;
 	if(trail)
@@ -350,7 +379,7 @@ void Nonogram::CursorOmlaag() {
 	if (y == hoogte)
 		y = 0;
 }
-
+//Maakt van een leeg vakje een kruisje of andersom
 void Nonogram::WijzigPunt() {
 	int i = 0;
 	int j = 0;
@@ -360,9 +389,10 @@ void Nonogram::WijzigPunt() {
 			nono[i][j] = !nono[i][j];
 }
 
+//Bepaalt of het vakje verandert bij het verplaatsen met de cursor
 int Nonogram::CursorSettings() {
 	cout << "Vakjes automatisch inkleuren met de cursor?\n";
-	cout << "\e[4mA\e[0man / \e[4mU\e[0mit";
+	cout << "\e[4mA\e[0man / \e[4mU\e[0mit";//Hier staat aan / uit
 	input = leesKar();
 	if (input == "A" || input == "a") {
 		trail = true;
@@ -373,8 +403,7 @@ int Nonogram::CursorSettings() {
 	return 1;
 }
 
-
-
+//Bepaalt de rijbeschrijvingen aan de hand van het beeld
 void Nonogram::setRijbeschr(int rij) {
 		int teller = 0;
 		int getal = 0;
@@ -386,7 +415,7 @@ void Nonogram::setRijbeschr(int rij) {
 			else if(teller > 0) {
 				rijen[rij][getal] = teller;
 				teller = 0;
-				getal ++;
+				getal++;
 			}
 			if (i == breedte - 1) {
 				rijen[rij][getal] = teller;
@@ -394,7 +423,7 @@ void Nonogram::setRijbeschr(int rij) {
 			}
 		}
 }
-	
+//Drukt de rijbeschrijvingen af
 void Nonogram::printRijbeschr(int rij) {
 	int teller = 0;
 	for(int j=0; j<breedte; j++) {
@@ -406,7 +435,7 @@ void Nonogram::printRijbeschr(int rij) {
 			cout << '0';
 	}
 }
-
+//Bepaalt de kolombeschrijvingen aan de hand van het huidige beeld
 void Nonogram::setKolombeschr() {
 	int teller = 0;
 	for(int i=0; i<hoogte; i++) {
@@ -432,7 +461,7 @@ void Nonogram::setKolombeschr() {
 	kolom = 0;
 	sorteerBeschr();
 }
-
+//Sorteert het kolommen-array zodat de getallen tegen de bovenrand komen
 void Nonogram::sorteerBeschr() {
 	int rij = 0;
 	for(int i=0; i<hoogte; i++)
@@ -462,7 +491,10 @@ void Nonogram::printKolombeschr() {
 		if(!legeRij) {
 			cout << "  ";
 			for(int j=0; j<breedte; j++) {
-				if(kolommen[i][j] > 0)
+				if(i == 0 && kolommen[i][j] == 0)
+					cout << '0' << ' ';
+				
+				else if(kolommen[i][j] > 0)
 					cout << kolommen[i][j] << ' ';
 				else {
 					cout << "  ";
@@ -478,18 +510,21 @@ void Nonogram::printKolombeschr() {
 		}
 	}
 }
+
+//Vraagt de gebruiker naar de naam van het bestand met de beshrijvingen
 void Nonogram::leesBestandsnaam() {
-	cout << "Geef de naam op van de inputfile." << endl;
+	cout << "Geef de naam op van de file." << endl;
 	cin >> bestandsnaam;
 }
 
+//Leest beschrijvingen in uit een tekstbestand
 void Nonogram::leesBeschr() {
 	ifstream invoer;
 	invoer.open(bestandsnaam);
 	int rij, kolom = 0;
 	int rij2, kolom2 = 0;
+	int getal = 0;
 
-	
 	if (! invoer) {
 		cout << "Ongeldige bestandsnaam" << endl;
 		exit(1);
@@ -523,14 +558,41 @@ void Nonogram::leesBeschr() {
 	invoer.close();
 }
 
+//Schrijft de beschrijvingen van het beeld weg naar een bestand
 void Nonogram::schrijfBeschr() {
+	int rij = 0;
+	leesBestandsnaam();
+	
 	ofstream uitvoer;
-	uitvoer.open("Beschrijving.txt");
+	uitvoer.open(bestandsnaam);
 	uitvoer << hoogte << ' ' << breedte << endl;
+	for(int i=0; i<hoogte; i++) {
+		for(int j=0; j<breedte; j++) {
+			if(rijen[i][j] != 0)
+				uitvoer << rijen[i][j] << ' ';
+		}
+		uitvoer << 0 << endl;
+	}
+	do {
+		if(kolommen[rij][kolom] != 0)
+		{
+			uitvoer << kolommen[rij][kolom] << ' ';
+			rij++;
+		}
+		else {
+			uitvoer << '0' << endl;
+			kolom++;
+			rij = 0;
+		}
+	}while(kolom < breedte);
+
+	uitvoer.close();
+	cout << "Beschrijvingen geschreven naar " << bestandsnaam << endl;
 }
 
+//Een (pseudo)random number generator
 int Nonogram::randomgetal() {
-	static int getal = 42;
-	getal = (221 * getal + 1) % 1000;
-	return getal;
+	static int rnd = 42;
+	rnd = (221 * rnd + 1) % 1000;
+	return rnd;
 } 
